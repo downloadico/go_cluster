@@ -1,0 +1,49 @@
+---
+- name: Set Hostname and IP Address for Easley
+  hosts: localhost
+  tasks:
+    - name: Backup Original Hostname and IP Address Files
+      command: cp /etc/hostname /etc/hostname.bak
+      command: cp /etc/sysconfig/network-scripts/ifcfg-eth0
+      /etc/sysconfig/network-scripts/ifcfg-eth0.bak
+      notify: Backed Up Original Hostname and IP Address Files
+
+    - name: Get Easley's IP Address using DNS
+      shell: nslookup easley | awk '{print $5}' | cut -d '/' -f 1
+      register: ip_address
+
+    - name: Set New Hostname
+      shell: echo "easley" > /etc/hostname
+
+    - name: Set New IP Address
+      shell: sed 's/^IPADDR=[a-zA-Z0-9.\/:]*$/IPADDR={{ item }}/'
+      /etc/sysconfig/network-scripts/ifcfg-eth0 > /tmp/ifcfg-eth0.tmp
+      with/items: "{{ ip_address }}"
+      notify: Set New IP Address
+
+    - name: Restart Network Manager
+      service:
+        name: network
+        state: restarted
+
+    - name: Update Package List
+      yum:
+        update_cache: yes
+        state: latest
+
+    - name: Install Development Tools Group
+      yum:
+        name: 'Development Tools'
+        state: latest
+        notify: Development Tools Installed
+
+    - name: Install GCC C++ Compiler
+      yum:
+        name: gcc-c++
+        state: latest
+
+    - name: Install GCC Fortran Compiler
+      yum:
+        name: gcc-gfortran
+        state: latest
+

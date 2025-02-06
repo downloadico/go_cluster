@@ -1,0 +1,46 @@
+---
+- name: Install various shells
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Ensure csh is installed
+      package:
+        name: csh
+        state: present
+
+    - name: Ensure tcsh is installed
+      package:
+        name: tcsh
+        state: present
+
+    - name: Ensure bash is installed
+      package:
+        name: bash
+        state: present
+
+    - name: Ensure ksh is installed
+      package:
+        name: ksh
+        state: present
+
+    - name: Ensure zsh is installed
+      package:
+        name: zsh
+        state: present
+
+  # post_tasks:
+    # - name: Set the default shell for the current user (optional)
+      # lineinfile:
+        # path: /etc/passwd
+        # regexp: '^{{ ansible_user }}:'
+        # line: '{{ ansible_user }}:x:{{ ansible_uid }}:{{ ansible_gid }}:/home/{{ ansible_user }}:/bin/zsh'
+        # state: present
+    # 
+    # - name: Ensure zsh is installed as the default shell for root (optional)
+      # lineinfile:
+        # path: /etc/passwd
+        # regexp: '^root:'
+        # line: 'root:x:0:0:root:/root:/bin/zsh'
+        # state: present
+
