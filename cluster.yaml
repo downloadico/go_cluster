@@ -2,12 +2,6 @@
 - name: Set Hostname and IP Address for Easley
   hosts: localhost
   tasks:
-    - name: Backup Original Hostname and IP Address Files
-      command: cp /etc/hostname /etc/hostname.bak
-      command: cp /etc/sysconfig/network-scripts/ifcfg-eth0
-      /etc/sysconfig/network-scripts/ifcfg-eth0.bak
-      notify: Backed Up Original Hostname and IP Address Files
-
     - name: Get Easley's IP Address using DNS
       shell: nslookup easley | awk '{print $5}' | cut -d '/' -f 1
       register: ip_address
