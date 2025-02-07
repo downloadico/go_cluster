@@ -1,32 +1,19 @@
 ---
 - name: Install various shells
-  hosts: all
+  hosts: localhost
   become: yes
+  vars:
+    shells:
+      - csh
+      - tcsh
+      - bash
+      - ksh
+      - zsh
 
   tasks:
-    - name: Ensure csh is installed
+    - name: Ensure shells are installed
       package:
-        name: csh
-        state: present
-
-    - name: Ensure tcsh is installed
-      package:
-        name: tcsh
-        state: present
-
-    - name: Ensure bash is installed
-      package:
-        name: bash
-        state: present
-
-    - name: Ensure ksh is installed
-      package:
-        name: ksh
-        state: present
-
-    - name: Ensure zsh is installed
-      package:
-        name: zsh
+        name: "{{ shells }}"
         state: present
 
   # post_tasks:
