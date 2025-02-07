@@ -1,0 +1,21 @@
+---
+- name: Set the minimum UID for the system
+  hosts: localhost
+  become: yes
+  remote_user: root
+  vars:
+    UID_MIN: 600
+    SYS_UID_MAX: 599
+
+  tasks:
+    - name: Modify /etc/login.defs to set UID_MIN to {{ UID_MIN }}
+      lineinfile:
+        path: /etc/login.defs
+        regexp: "^UID_MIN.*"
+        line: "UID_MIN                   {{ UID_MIN }}"
+
+    - name: Modify /etc/login.defs to set SYS_UID_MAX to {{ SYS_UID_MAX }}
+      lineinfile:
+        path: /etc/login.defs
+        regexp: "^SYS_UID_MAX.*"
+        line: "SYS_UID_MAX               {{ SYS_UID_MAX }}"
