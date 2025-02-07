@@ -1,0 +1,48 @@
+---
+- name: Build and install WareWulf from Source on Rocky Linux 9
+  hosts: localhost
+  become: yes
+  remote_user: root
+  vars:
+    WW_version: "4.5.8"
+    WW_source_url: "https://github.com/warewulf/warewulf/releases/download/v{{WW_version}}/warewulf-{{WW_version}}.tar.gz"
+    WW_tarball: "~/rpmbuild/SOURCES/warewulf-{{ WW_version }}.tar.gz"
+  tasks:
+    - name: Ensure required packages are installed
+      dnf:
+        name:
+          - golang
+          - gpgme-devel
+        state: present
+
+    - name: Create rpmbuild directory structure for the user
+      file:
+        path: "{{ item }}"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        mode: '0755'
+        state: directory
+      loop:
+       - "~/rpmbuild/BUILD"
+       - "~/rpmbuild/BUILDROOT"
+       - "~/rpmbuild/RPMS"
+       - "~/rpmbuild/SOURCES"
+       - "~/rpmbuild/SPECS"
+       - "~/rpmbuild/SRPMS"
+
+    - name: Download WW source
+      get_url:
+        url: "{{ WW_source_url }}"
+        dest: "~/rpmbuild/SOURCES/warewulf-{{ WW_version }}.tar.gz"
+
+    - name: Extract the tarball
+      unarchive:
+        src: "{{ WW_tarball }}"
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Build WW RPMs
+      command: |
+        rpmbuild -ba warewulf.spec
+      args:
+        chdir: "/tmp/warewulf-{{ WW_version }}"

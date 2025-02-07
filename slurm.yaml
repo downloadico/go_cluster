@@ -1,0 +1,92 @@
+---
+- name: Build and Install Slurm from Source on Rocky Linux 9
+  hosts: localhost
+  become: yes
+  remote_user: root
+  vars:
+    slurm_version: "23.02.7"
+    slurm_source_url: "https://download.schedmd.com/slurm/slurm-{{ slurm_version }}.tar.bz2"
+    slurm_install_prefix: "/opt/slurm"
+
+  tasks:
+    - name: Ensure CodeReady Linux Builder (CRB) repository is enabled
+      command: "dnf config-manager --set-enabled crb"
+
+    - name: Ensure required packages are installed
+      dnf:
+        name:
+          - wget
+          - git
+          - rpm-build
+          - gcc
+          - gcc-c++
+          - make
+          - pam-devel
+          - readline-devel
+          - json-c-devel
+          - http-parser-devel
+          - libyaml-devel
+          - lua-devel
+          - man2html
+          - munge
+          - munge-devel
+          - freeipmi-devel
+          - libibumad-devel
+          - libibmad-devel
+          - hdf5-devel
+          - mysql-devel
+          - hwloc-devel
+          - dbus-devel
+          - perl-ExtUtils-MakeMaker
+        state: present
+
+    - name: Create rpmbuild directory structure for the user
+      file:
+        path: "{{ item }}"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        mode: '0755'
+        state: directory
+      loop:
+       - "~/rpmbuild/BUILD"
+       - "~/rpmbuild/BUILDROOT"
+       - "~/rpmbuild/RPMS"
+       - "~/rpmbuild/SOURCES"
+       - "~/rpmbuild/SPECS"
+       - "~/rpmbuild/SRPMS"
+
+    - name: Download Slurm source
+      get_url:
+        url: "{{ slurm_source_url }}"
+        dest: "~/rpmbuild/SOURCES/slurm-{{ slurm_version }}.tar.bz2"
+
+    - name: Extract the tarball
+      unarchive:
+        src: "~/rpmbuild/SOURCES/slurm-{{ slurm_version }}.tar.bz2"
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Build Slurm RPMs
+      command: |
+        rpmbuild -ta ~/rpmbuild/SOURCES/slurm-{{ slurm_version }}.tar.bz2
+      args:
+        chdir: "/tmp/slurm-{{ slurm_version }}"
+      environment:
+        _prefix: "{{ slurm_install_prefix }}"
+        _slurm_sysconfdir: "{{ slurm_install_prefix }}/etc/slurm"
+
+#    - name: Find all rpm files in folder
+#      find:
+#        paths: "~/rpmbuild/RPMS/x86_64/"
+#        patterns: "*.rpm"
+#      register: rpm_files
+# 
+#    - name: Setting rpm_list
+#      set_fact:
+#        rpm_list: "{{ rpm_files.files | map(attribute='path') | list}}"
+#
+#    - name: installing the rpm files
+#      yum:
+#        name: "{{rpm_list}}"
+#        state: present
+#      disable_gpg_check: True
